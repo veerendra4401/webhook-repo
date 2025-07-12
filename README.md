@@ -10,7 +10,7 @@ This application monitors GitHub repository events using webhooks and displays t
 - Supports multiple event types with formatted display
 - Secure webhook handling with signature verification
 - Detailed event logging and monitoring
-- Automatic timestamp conversion to UTC
+- Automatic timestamp conversion to IST (Indian Standard Time)
 - Beautiful and responsive UI design
 
 ## Setup
