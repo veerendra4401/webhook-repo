@@ -76,4 +76,5 @@ Common webhook issues:
 - Input validation and sanitization
 - Error handling and logging
 - Secure data transmission
-- Rate limiting protection 
+- Rate limiting protection
+- <img width="1138" height="691" alt="Capture" src="https://github.com/user-attachments/assets/b22fa92e-45da-49a8-954a-99c5c171e1f8" />
