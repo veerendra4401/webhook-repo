@@ -4,6 +4,7 @@ This application monitors GitHub webhook events and displays them in a dashboard
 
 ## Test Update
 Adding a test update to trigger a webhook event.
+Testing timezone fix - events should now show correct IST time.
 
 ## Features
 
