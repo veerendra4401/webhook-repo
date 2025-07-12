@@ -256,6 +256,27 @@
             animation: spin 1s linear infinite;
         }
         
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--github-border);
+            border-radius: 50%;
+            border-top-color: var(--github-blue);
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 40px 20px;
+            color: #8b949e;
+        }
+
         /* Responsive design */
         @media (max-width: 768px) {
             body {
@@ -283,7 +304,10 @@
             <span class="events-count" id="events-count">Loading...</span>
         </div>
         <div id="events">
-            <div class="no-events">Loading events...</div>
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <div>Loading events...</div>
+            </div>
         </div>
     </div>
     <div class="refresh-info">
@@ -296,7 +320,21 @@
 
     <script>
         let lastRefreshTime = null;
+        let isLoading = false;
         
+        function setLoading(loading) {
+            isLoading = loading;
+            const container = document.getElementById('events');
+            if (loading) {
+                container.innerHTML = `
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <div>Loading events...</div>
+                    </div>
+                `;
+            }
+        }
+
         function formatDate(isoString) {
             const date = new Date(isoString);
             return date.toLocaleString('en-US', {
@@ -377,35 +415,39 @@
                 refreshButton.disabled = true;
             }
             
-            fetch('/events')
-                .then(response => response.json())
-                .then(events => {
-                    const container = document.getElementById('events');
-                    const countElement = document.getElementById('events-count');
-                    
-                    if (events.length === 0) {
-                        container.innerHTML = '<div class="no-events">No events found</div>';
-                        countElement.textContent = '0 events';
-                    } else {
-                        container.innerHTML = events.map(formatEvent).join('');
-                        countElement.textContent = `${events.length} ${events.length === 1 ? 'event' : 'events'}`;
-                    }
-                    
-                    updateRefreshTime();
-                })
-                .catch(error => {
-                    console.error('Error fetching events:', error);
-                    document.getElementById('events').innerHTML = '<div class="no-events">Error loading events. Please try again.</div>';
-                    document.getElementById('events-count').textContent = 'Error';
-                })
-                .finally(() => {
-                    if (manualRefresh) {
-                        const refreshButton = document.querySelector('.refresh-button');
-                        const refreshIcon = refreshButton.querySelector('.refresh-icon');
-                        refreshIcon.classList.remove('refreshing');
-                        refreshButton.disabled = false;
-                    }
-                });
+            if (!isLoading) {
+                setLoading(true);
+                fetch('/events')
+                    .then(response => response.json())
+                    .then(events => {
+                        const container = document.getElementById('events');
+                        const countElement = document.getElementById('events-count');
+                        
+                        if (events.length === 0) {
+                            container.innerHTML = '<div class="no-events">No events found</div>';
+                            countElement.textContent = '0 events';
+                        } else {
+                            container.innerHTML = events.map(formatEvent).join('');
+                            countElement.textContent = `${events.length} ${events.length === 1 ? 'event' : 'events'}`;
+                        }
+                        
+                        updateRefreshTime();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching events:', error);
+                        document.getElementById('events').innerHTML = '<div class="no-events">Error loading events. Please try again.</div>';
+                        document.getElementById('events-count').textContent = 'Error';
+                    })
+                    .finally(() => {
+                        setLoading(false);
+                        if (manualRefresh) {
+                            const refreshButton = document.querySelector('.refresh-button');
+                            const refreshIcon = refreshButton.querySelector('.refresh-icon');
+                            refreshIcon.classList.remove('refreshing');
+                            refreshButton.disabled = false;
+                        }
+                    });
+            }
         }
 
         // Initial fetch
