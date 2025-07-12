@@ -1,6 +1,9 @@
 # GitHub Webhook Monitor
 
-This application monitors GitHub repository events using webhooks and displays them in real-time through a web interface.
+This application monitors GitHub webhook events and displays them in a dashboard.
+
+## Test Update
+Adding a test update to trigger a webhook event.
 
 ## Features
 
