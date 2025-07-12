@@ -87,10 +87,12 @@ The application is currently in development mode. For production:
 - Implement rate limiting
 - Add monitoring and logging
 
+Note: This is a test update to verify webhook functionality.
+
 ## Contributing
 
 Feel free to open issues or submit pull requests. All contributions are welcome!
 
 ## License
 
-MIT License - feel free to use this project for your own purposes. 
+MIT License - feel free to use this project for your own purposes.
