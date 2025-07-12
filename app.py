@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import hmac
 import hashlib
 import json
+import pytz
 
 # Load environment variables
 load_dotenv()
@@ -22,6 +23,9 @@ collection_name = os.getenv('COLLECTION_NAME', 'events')
 client = MongoClient(mongodb_uri)
 db = client[database_name]
 collection = db[collection_name]
+
+# Set up timezone
+ist_tz = pytz.timezone('Asia/Kolkata')
 
 def verify_signature(payload_body, signature_header):
     """Verify that the webhook is from GitHub"""
@@ -68,7 +72,8 @@ def webhook():
     if not author:
         return 'Missing author information', 400
 
-    timestamp = datetime.utcnow().isoformat()
+    # Get current time in IST
+    timestamp = datetime.now(ist_tz).isoformat()
 
     # Process different event types
     if event == 'push':
