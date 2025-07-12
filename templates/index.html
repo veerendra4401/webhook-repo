@@ -38,6 +38,10 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            transition: background-color 0.2s ease;
+        }
+        .event:hover {
+            background-color: #f6f8fa;
         }
         .event:last-child {
             border-bottom: none;
@@ -45,16 +49,25 @@
         .event-time {
             color: #586069;
             font-size: 0.9em;
+            font-weight: 500;
         }
         .author {
             color: #24292e;
             font-weight: 600;
+            transition: color 0.2s ease;
+        }
+        .author:hover {
+            color: #0366d6;
         }
         .branch {
             background: #e1e4e8;
             padding: 2px 6px;
             border-radius: 3px;
             font-family: monospace;
+            transition: background-color 0.2s ease;
+        }
+        .branch:hover {
+            background-color: #d1d5da;
         }
         .no-events {
             text-align: center;
