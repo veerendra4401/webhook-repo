@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Events Monitor</title>
+    <style>
+        :root {
+            --github-black: #0d1117;
+            --github-gray: #161b22;
+            --github-light-gray: #21262d;
+            --github-border: #30363d;
+            --github-text: #c9d1d9;
+            --github-blue: #58a6ff;
+            --github-green: #3fb950;
+            --github-purple: #bc8cff;
+            --github-orange: #ffa657;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--github-black);
+            color: var(--github-text);
+            line-height: 1.5;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px 20px;
+            background: var(--github-gray);
+            border-radius: 10px;
+            border: 1px solid var(--github-border);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header h1 {
+            margin: 0;
+            color: white;
+            font-weight: 600;
+            font-size: 28px;
+            letter-spacing: -0.5px;
+        }
+        
+        .header p {
+            margin: 8px 0 0;
+            color: var(--github-text);
+            opacity: 0.8;
+        }
+        
+        .events-container {
+            background: var(--github-gray);
+            border-radius: 10px;
+            border: 1px solid var(--github-border);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .events-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--github-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--github-light-gray);
+        }
+        
+        .events-title {
+            font-weight: 600;
+            color: white;
+        }
+        
+        .events-count {
+            background: var(--github-light-gray);
+            color: var(--github-text);
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            border: 1px solid var(--github-border);
+        }
+        
+        .event {
+            padding: 16px;
+            border-bottom: 1px solid var(--github-border);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .event:hover {
+            background-color: var(--github-light-gray);
+        }
+        
+        .event:last-child {
+            border-bottom: none;
+        }
+        
+        .event-icon {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        
+        .event-content {
+            flex-grow: 1;
+        }
+        
+        .event-time {
+            color: #8b949e;
+            font-size: 0.85em;
+            margin-top: 4px;
+        }
+        
+        .author {
+            color: var(--github-blue);
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .author:hover {
+            color: var(--github-blue);
+            text-decoration: underline;
+        }
+        
+        .branch {
+            background: rgba(88, 166, 255, 0.1);
+            color: var(--github-blue);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+            font-size: 0.9em;
+            border: 1px solid rgba(88, 166, 255, 0.2);
+            transition: all 0.2s ease;
+        }
+        
+        .branch:hover {
+            background: rgba(88, 166, 255, 0.2);
+            border-color: rgba(88, 166, 255, 0.4);
+        }
+        
+        .no-events {
+            text-align: center;
+            color: #8b949e;
+            padding: 40px 20px;
+        }
+        
+        .event-type {
+            padding: 4px 10px;
+            border-radius: 2em;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-right: 8px;
+        }
+        
+        .event-type.push {
+            background: rgba(56, 139, 253, 0.15);
+            color: var(--github-blue);
+        }
+        
+        .event-type.pull-request {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--github-green);
+        }
+        
+        .event-type.merge {
+            background: rgba(188, 140, 255, 0.15);
+            color: var(--github-purple);
+        }
+        
+        .refresh-info {
+            text-align: center;
+            color: #8b949e;
+            font-size: 0.9em;
+            margin-top: 30px;
+        }
+        
+        .refresh-button {
+            background-color: #238636;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .refresh-button:hover {
+            background-color: #2ea043;
+            transform: translateY(-1px);
+        }
+        
+        .refresh-button:active {
+            transform: translateY(0);
+        }
+        
+        .refresh-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .last-refreshed {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+        
+        /* GitHub-like icons */
+        .icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            vertical-align: text-bottom;
+        }
+        
+        .icon-git-push {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%2358a6ff'%3E%3Cpath d='M1 2.5A2.5 2.5 0 0 1 3.5 0h8.75a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0V1.5h-8a1 1 0 0 0-1 1v6.708A2.492 2.492 0 0 1 3.5 9h3.25a.75.75 0 0 1 0 1.5H3.5a1 1 0 0 0 0 2h5.75a.75.75 0 0 1 0 1.5H3.5A2.5 2.5 0 0 1 1 11.5v-9zm13.23 7.79a.75.75 0 0 0-1.06-1.06l-2.505 2.505a.75.75 0 0 0 0 1.06l2.505 2.506a.75.75 0 0 0 1.06-1.06l-.97-.97h4.44a.75.75 0 0 0 0-1.5h-4.44l.97-.97z'%3E%3C/path%3E%3C/svg%3E");
+        }
+        
+        .icon-git-pull-request {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%233fb950'%3E%3Cpath d='M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354zM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0z'%3E%3C/path%3E%3C/svg%3E");
+        }
+        
+        .icon-git-merge {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23bc8cff'%3E%3Cpath d='M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm0 2.122a2.25 2.25 0 1 0-1.5 0v.878A2.25 2.25 0 0 0 5.75 8.5h1.5v2.128a2.251 2.251 0 1 0 1.5 0V8.5h1.5a2.25 2.25 0 0 0 2.25-2.25v-.878a2.25 2.25 0 1 0-1.5 0v.878a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 5 6.25v-.878zm3.75 7.378a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm3-8.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z'%3E%3C/path%3E%3C/svg%3E");
+        }
+        
+        .refresh-icon {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3E%3Cpath d='M8 4.75a.75.75 0 0 0-1.5 0v3.5a.75.75 0 0 0 .471.696l2.5 1a.75.75 0 0 0 .557-1.392L8 7.963V4.75z'%3E%3C/path%3E%3Cpath fill-rule='evenodd' d='M6.835 1.911A5 5 0 0 1 13 5a.75.75 0 0 0 1.5 0 6.5 6.5 0 1 0-1.404 4.031l.67-.335a.75.75 0 1 0-.67-1.342l-.668.334A5 5 0 0 1 3 5a.75.75 0 0 0-1.5 0 6.5 6.5 0 0 0 5.335 6.089 6.5 6.5 0 1 0 6.033-9.24.75.75 0 0 0-1.38-.577 5 5 0 1 1-6.153 6.153.75.75 0 0 0-.577-1.38 5 5 0 0 1 3.001-8.534z'%3E%3C/path%3E%3C/svg%3E");
+            width: 14px;
+            height: 14px;
+        }
+        
+        /* Animation for refresh */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .refreshing {
+            animation: spin 1s linear infinite;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GitHub Events Monitor</h1>
+        <p>Real-time tracking of repository activities</p>
+    </div>
+    <div class="events-container">
+        <div class="events-header">
+            <span class="events-title">Recent Events</span>
+            <span class="events-count" id="events-count">Loading...</span>
+        </div>
+        <div id="events">
+            <div class="no-events">Loading events...</div>
+        </div>
+    </div>
+    <div class="refresh-info">
+        <button onclick="fetchEvents(true)" class="refresh-button">
+            <span class="icon refresh-icon"></span>
+            Refresh Now
+        </button>
+        <p class="last-refreshed">Auto-refreshing every 15 seconds</p>
+    </div>
+
+    <script>
+        let lastRefreshTime = null;
+        
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString('en-US', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        function getEventTypeClass(action) {
+            switch(action) {
+                case 'PUSH': return 'push';
+                case 'PULL_REQUEST': return 'pull-request';
+                case 'MERGE': return 'merge';
+                default: return '';
+            }
+        }
+        
+        function getEventIcon(action) {
+            switch(action) {
+                case 'PUSH': return 'icon-git-push';
+                case 'PULL_REQUEST': return 'icon-git-pull-request';
+                case 'MERGE': return 'icon-git-merge';
+                default: return '';
+            }
+        }
+
+        function formatEvent(event) {
+            const author = `<span class="author">${event.author}</span>`;
+            const timestamp = `<span class="event-time">${formatDate(event.timestamp)}</span>`;
+            const eventTypeClass = getEventTypeClass(event.action);
+            const eventType = `<span class="event-type ${eventTypeClass}">${event.action.replace('_', ' ')}</span>`;
+            const eventIcon = `<span class="icon ${getEventIcon(event.action)} event-icon"></span>`;
+            
+            let message = '';
+            switch(event.action) {
+                case 'PUSH':
+                    message = `${eventType} ${author} pushed to <span class="branch">${event.to_branch}</span>`;
+                    break;
+                case 'PULL_REQUEST':
+                    message = `${eventType} ${author} submitted a pull request from <span class="branch">${event.from_branch}</span> to <span class="branch">${event.to_branch}</span>`;
+                    break;
+                case 'MERGE':
+                    message = `${eventType} ${author} merged branch <span class="branch">${event.from_branch}</span> to <span class="branch">${event.to_branch}</span>`;
+                    break;
+            }
+            
+            return `
+                <div class="event">
+                    ${eventIcon}
+                    <div class="event-content">
+                        <div>${message}</div>
+                        ${timestamp}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateRefreshTime() {
+            lastRefreshTime = new Date();
+            const timeString = lastRefreshTime.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+            document.querySelector('.last-refreshed').textContent = `Last refreshed at ${timeString} • Auto-refreshing every 15 seconds`;
+        }
+
+        function fetchEvents(manualRefresh = false) {
+            if (manualRefresh) {
+                const refreshButton = document.querySelector('.refresh-button');
+                const refreshIcon = refreshButton.querySelector('.refresh-icon');
+                refreshIcon.classList.add('refreshing');
+                refreshButton.disabled = true;
+            }
+            
+            fetch('/events')
+                .then(response => response.json())
+                .then(events => {
+                    const container = document.getElementById('events');
+                    const countElement = document.getElementById('events-count');
+                    
+                    if (events.length === 0) {
+                        container.innerHTML = '<div class="no-events">No events found</div>';
+                        countElement.textContent = '0 events';
+                    } else {
+                        container.innerHTML = events.map(formatEvent).join('');
+                        countElement.textContent = `${events.length} ${events.length === 1 ? 'event' : 'events'}`;
+                    }
+                    
+                    updateRefreshTime();
+                })
+                .catch(error => {
+                    console.error('Error fetching events:', error);
+                    document.getElementById('events').innerHTML = '<div class="no-events">Error loading events. Please try again.</div>';
+                    document.getElementById('events-count').textContent = 'Error';
+                })
+                .finally(() => {
+                    if (manualRefresh) {
+                        const refreshButton = document.querySelector('.refresh-button');
+                        const refreshIcon = refreshButton.querySelector('.refresh-icon');
+                        refreshIcon.classList.remove('refreshing');
+                        refreshButton.disabled = false;
+                    }
+                });
+        }
+
+        // Initial fetch
+        fetchEvents();
+
+        // Poll every 15 seconds
+        setInterval(fetchEvents, 15000);
+    </script>
+</body>
+</html> 
